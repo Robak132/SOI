@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "vfs.h"
 
-#include <string.h>
 
 int main(int ArgC, char ** ArgV)
 {
 	char * vfs_name;
 	char * command;
-	struct vfs * v;
+	struct FileSystem * v;
 	
 	if(ArgC < 3)
 	{
@@ -34,13 +34,13 @@ int main(int ArgC, char ** ArgV)
 		if(ArgC == 4)
 		{
 			size_t size = atoi(ArgV[3]);
-			v = vfs_create(vfs_name, size);
+			v = create(vfs_name, size);
 			if(!v)
 			{
 				printf("Nie udalo sie utworzyc dysku wirtualnego!\n");
 				return 2;
 			}
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> create <size in bytes>\n", ArgV[0]);
@@ -49,16 +49,16 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 3)
 		{
-			v = vfs_open(vfs_name);
+			v = open(vfs_name);
 			if(!v)
 			{
 				printf("Nie udalo sie otworzyc dysku wirtualnego!\n");
 				return 2;
 			}
 			
-			vfs_dump(v);
+			dump(v);
 			
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> dump\n", ArgV[0]);
@@ -67,16 +67,16 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 3)
 		{
-			v = vfs_open(vfs_name);
+			v = open(vfs_name);
 			if(!v)
 			{
 				printf("Nie udalo sie otworzyc dysku wirtualnego!\n");
 				return 2;
 			}
 			
-			vfs_list(v);
+			list(v);
 			
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> list\n", ArgV[0]);
@@ -85,16 +85,16 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 5)
 		{
-			v = vfs_open(vfs_name);
+			v = open(vfs_name);
 			if(!v)
 			{
 				printf("Nie udalo sie otworzyc dysku wirtualnego!\n");
 				return 2;
 			}
 			
-			printf("Wysylanie pliku, wynik: %d\n", vfs_copy_to(v, ArgV[3], ArgV[4]));
+			printf("Wysylanie pliku, wynik: %d\n", copyInside(v, ArgV[3], ArgV[4]));
 			
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> push <source file name> <destination file name>\n", ArgV[0]);
@@ -103,16 +103,16 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 5)
 		{
-			v = vfs_open(vfs_name);
+			v = open(vfs_name);
 			if(!v)
 			{
 				printf("Nie udalo sie otworzyc dysku wirtualnego!\n");
 				return 2;
 			}
 			
-			printf("Pobieranie pliku, wynik: %d\n", vfs_copy_from(v, ArgV[3], ArgV[4]));
+			printf("Pobieranie pliku, wynik: %d\n", copyOutside(v, ArgV[3], ArgV[4]));
 			
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> pull <source file name> <destination file name>\n", ArgV[0]);
@@ -121,16 +121,16 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 4)
 		{
-			v = vfs_open(vfs_name);
+			v = open(vfs_name);
 			if(!v)
 			{
 				printf("Nie udalo sie otworzyc dysku wirtualnego!\n");
 				return 2;
 			}
 			
-			vfs_delete_file(v, ArgV[3]);
+			delete(v, ArgV[3]);
 			
-			vfs_close(v);
+			close_file(v);
 		}
 		else
 			printf("%s <vfs name> pull <source file name> <destination file name>\n", ArgV[0]);
@@ -139,7 +139,7 @@ int main(int ArgC, char ** ArgV)
 	{
 		if(ArgC == 3)
 		{
-			vfs_delete(vfs_name);
+			unlink_file(vfs_name);
 		}
 		else
 			printf("%s <vfs name> delete\n", ArgV[0]);
@@ -149,7 +149,6 @@ int main(int ArgC, char ** ArgV)
 		printf("%s invalid command `%s`\n", ArgV[0], command);
 		return 1;
 	}
-	
-	
+		
 	return 0;
 }
