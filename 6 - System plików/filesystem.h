@@ -34,6 +34,4 @@ int copyInside(const struct FileSystem * v, const char * source_file_name, const
 int copyOutside(const struct FileSystem * v, const char * source_file_name, const char * destination_file_name);
 int delete(const struct FileSystem * v, const char * file_name);
 
-unsigned int vfs_inodes_from_size(const size_t size);
-unsigned int vfs_required_inodes_for(const size_t size);
-size_t vfs_get_block_position(const struct FileSystem * v, const size_t inode);
+unsigned int findRequiredNodes(const size_t size);

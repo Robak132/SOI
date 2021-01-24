@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "vfs.h"
+#include "filesystem.h"
 
 struct FileSystem* create(const char * file_name, const size_t size) {
 	FILE* F;
@@ -39,7 +39,7 @@ struct FileSystem* create(const char * file_name, const size_t size) {
 		
 		fwrite(&sb, sizeof(sb), 1, F);
 		
-		nodes_num = vfs_inodes_from_size(size);
+		nodes_num = (size - sizeof(struct SuperBlock)) / (sizeof(struct Node) + BLOCK_SIZE);
 		
 		nodes = malloc(sizeof(struct Node) * nodes_num);
 		for(I = 0; I < nodes_num; I++)
@@ -70,30 +70,25 @@ struct FileSystem* open(const char * file_name) {
 	fseek(F, 0, SEEK_END);
 	size_file = ftell(F);
 	
-	if(size_file < sizeof(struct SuperBlock))
-	{
+	if(size_file < sizeof(struct SuperBlock)) {
 		fclose(F);
 		return NULL;
 	}
 	fseek(F, 0, SEEK_SET);
 	
-	if(fread(&sb, sizeof(sb), 1, F) <= 0)
-	{
+	if(fread(&sb, sizeof(sb), 1, F) <= 0) {
 		fclose(F);
 		return NULL;
 	}
 	
-	if(sb.size != size_file)
-	{
+	if(sb.size != size_file) {
 		fclose(F);
 		return NULL;
 	}
 	
-	nodes_num = vfs_inodes_from_size(size_file);
-	
+	nodes_num = (size_file - sizeof(struct SuperBlock)) / (sizeof(struct Node) + BLOCK_SIZE);	
 	nodes = malloc(sizeof(struct Node) * nodes_num);
-	if(fread(nodes, sizeof(struct Node), nodes_num, F) <= 0)
-	{
+	if(fread(nodes, sizeof(struct Node), nodes_num, F) <= 0) {
 		fclose(F);
 		free(nodes);
 		return NULL;
@@ -179,7 +174,7 @@ int copyInside(const struct FileSystem* v, const char* source_file_name, const c
 	source_file_length = ftell(source_file);
 	fseek(source_file, 0, SEEK_SET);
 	
-	required_inodes = vfs_required_inodes_for(source_file_length);
+	required_inodes = findRequiredNodes(source_file_length);
 	nodes_queue = malloc(required_inodes * sizeof(unsigned int));
 	
 	current_queue_inode = 0;
@@ -201,7 +196,9 @@ int copyInside(const struct FileSystem* v, const char* source_file_name, const c
 		v->nodes[nodes_queue[I]].flags = FLAG_IN_USE;
 		v->nodes[nodes_queue[I]].size = fread(read_buffer, 1, sizeof(read_buffer), source_file);
 		
-		fseek(v->F, vfs_get_block_position(v, nodes_queue[I]), SEEK_SET);
+		size_t position = sizeof(struct SuperBlock) + sizeof(struct Node) * v->nodes_num + BLOCK_SIZE * nodes_queue[I];
+
+		fseek(v->F, position, SEEK_SET);
 		fwrite(read_buffer, 1, v->nodes[I].size, v->F);
 		if(I == 0)
 		{
@@ -284,20 +281,13 @@ int delete(const struct FileSystem* v, const char* file_name) {
 	return 1;
 }
 
-unsigned int vfs_inodes_from_size(const size_t size)
+unsigned int findRequiredNodes(const size_t size)
 {
-	return (size - sizeof(struct SuperBlock)) / (sizeof(struct Node) + BLOCK_SIZE);
-}
-unsigned int vfs_required_inodes_for(const size_t size)
-{
-	size_t size_remaining;
+	size_t size_remaining = size;
 	unsigned int required_inodes = 0;
 	size_t current_block_length;
 	
-	size_remaining = size;
-	
-	do
-	{
+	do {
 		required_inodes++;
 		
 		current_block_length = size_remaining;
@@ -309,8 +299,4 @@ unsigned int vfs_required_inodes_for(const size_t size)
 	while(size_remaining > 0);
 	
 	return required_inodes;
-}
-size_t vfs_get_block_position(const struct FileSystem* v, const size_t inode)
-{
-	return sizeof(struct SuperBlock) + sizeof(struct Node) * v->nodes_num + BLOCK_SIZE * inode;
 }
