@@ -219,14 +219,9 @@ int copyInside(const struct FileSystem* v, const char* source_file_name, const c
 int copyOutside(const struct FileSystem* v, const char* source_file_name, const char* destination_file_name) {
 	FILE* destination_file;
 	unsigned int I;
-	unsigned int start_node;
+	unsigned int start_node = -1;
 	char buffer[BLOCK_SIZE];
 	
-	destination_file = fopen(destination_file_name, "wb");
-	if(!destination_file)
-		return -1;
-	
-	start_node = -1;
 	for(I = 0; I < v->nodes_num; I++)
 	{
 		if(v->nodes[I].flags & FLAG_IN_USE && v->nodes[I].flags & FLAG_IS_START && strncmp(v->nodes[I].name, source_file_name, NAME_MAX) == 0)
@@ -239,6 +234,10 @@ int copyOutside(const struct FileSystem* v, const char* source_file_name, const 
 	if(start_node == -1)
 		return -2;
 	
+	destination_file = fopen(destination_file_name, "wb");
+	if(!destination_file)
+		return -1;
+
 	while(start_node != -1)
 	{
 		if(fread(buffer, 1, v->nodes[start_node].size, v->F) != v->nodes[start_node].size)

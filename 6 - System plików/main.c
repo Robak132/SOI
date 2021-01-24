@@ -100,7 +100,7 @@ int main(int ArgC, char ** ArgV)
 				printf("Error!\n");
 				return 2;
 			}
-			delete(v, ArgV[3]);
+			printf("Result: %d\n", delete(v, ArgV[3]));
 			close_file(v);
 		}
 		else

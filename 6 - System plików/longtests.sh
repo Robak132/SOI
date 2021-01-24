@@ -36,3 +36,6 @@ do
     true $(( i=i+1 ))
 done
 ./manager $VFS_FILE_NAME dump
+
+echo 'Delete'
+./manager $VFS_FILE_NAME delete
