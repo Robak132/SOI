@@ -152,6 +152,7 @@ int copyInside(const struct FileSystem* v, const char* source_file_name, const c
 	unsigned int* nodes_queue;
 
 	size_t source_file_length;
+	size_t position;
 	unsigned int required_inodes;
 	unsigned int current_inode;
 	unsigned int current_queue_inode;
@@ -196,7 +197,7 @@ int copyInside(const struct FileSystem* v, const char* source_file_name, const c
 		v->nodes[nodes_queue[I]].flags = FLAG_IN_USE;
 		v->nodes[nodes_queue[I]].size = fread(read_buffer, 1, sizeof(read_buffer), source_file);
 		
-		size_t position = sizeof(struct SuperBlock) + sizeof(struct Node) * v->nodes_num + BLOCK_SIZE * nodes_queue[I];
+		position = sizeof(struct SuperBlock) + sizeof(struct Node) * v->nodes_num + BLOCK_SIZE * nodes_queue[I];
 
 		fseek(v->F, position, SEEK_SET);
 		fwrite(read_buffer, 1, v->nodes[I].size, v->F);
